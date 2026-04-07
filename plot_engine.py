@@ -14,25 +14,26 @@ PLOT_CONFIG = {
         "controls": [
             {"type": "slider_int", "label": "Bins", "key": "bins", "default": 20, "min": 5, "max": 100},
             {"type": "checkbox", "label": "KDE", "key": "kde", "default": True},
-            {"type": "combo", "label": "Color", "key": "color", "default": "skyblue", "items": ["skyblue", "salmon", "lightgreen"]}
+            {"type": "combo", "label": "Color", "key": "color", "default": "skyblue", "items": ["skyblue", "salmon", "lightgreen", "gold", "orchid"]}
         ],
-        "requires_refresh_on_keys": ["query"]
+        "requires_refresh_on_keys": ["query", "color", "kde", "bins"]
     },
     "Boxplot": {
         "draw_func": lambda data, col, iid, parent: draw_box(data, col, iid, parent),
         "controls": [
-            {"type": "checkbox", "label": "Compare Mode", "key": "compare_mode", "default": False}
+            {"type": "checkbox", "label": "Compare Mode", "key": "compare_mode", "default": False},
+            {"type": "combo", "label": "Palette", "key": "palette", "default": "Set2", "items": ["Set2", "Paired", "Accent", "Pastel1", "Dark2", "viridis", "rocket"]}
         ],
-        "requires_refresh_on_keys": ["compare_mode", "query", "comp_queries"],
+        "requires_refresh_on_keys": ["compare_mode", "query", "comp_queries", "palette"],
         "extra_ui": lambda col, iid, refresh_cb: render_boxplot_ui(col, iid, refresh_cb)
     },
     "Bar Chart (Top N)": {
         "draw_func": lambda data, col, iid, parent: draw_bar(data, col, iid, parent),
         "controls": [
             {"type": "slider_int", "label": "Top N", "key": "topn", "default": 10, "min": 1, "max": 50},
-            {"type": "combo", "label": "Palette", "key": "palette", "default": "magma", "items": ["magma", "viridis", "rocket"]}
+            {"type": "combo", "label": "Palette", "key": "palette", "default": "magma", "items": ["magma", "viridis", "rocket", "mako", "crest"]}
         ],
-        "requires_refresh_on_keys": ["query"]
+        "requires_refresh_on_keys": ["query", "topn", "palette"]
     }
 }
 
@@ -91,6 +92,7 @@ def draw_box(data, col, iid, parent):
     compare_mode = get_state(col, iid, "compare_mode", False)
     comp_queries = get_state(col, iid, "comp_queries", [])
     base_query = get_state(col, iid, "query", "")
+    palette_name = get_state(col, iid, "palette", "Set2")
 
     if compare_mode and comp_queries:
         plot_data = {}
@@ -105,10 +107,10 @@ def draw_box(data, col, iid, parent):
         
         if plot_data:
             combined_df = pd.concat([pd.Series(v.values, name=k) for k, v in plot_data.items()], axis=1)
-            sns.boxplot(data=combined_df, ax=ax, palette="Set2")
+            sns.boxplot(data=combined_df, ax=ax, palette=palette_name)
             ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
     else:
-        sns.boxplot(x=data, color="salmon", ax=ax)
+        sns.boxplot(x=data, ax=ax, palette=palette_name)
     
     fig.tight_layout()
     render_to_dpg(fig, iid, parent)
@@ -132,11 +134,16 @@ def render_to_dpg(fig, iid, parent):
 
 def draw_hist(data, col, iid, parent):
     fig = Figure(figsize=(6.4, 4.8)); ax = fig.add_subplot(111)
-    sns.histplot(data, bins=get_state(col, iid, "bins", 20), kde=get_state(col, iid, "kde", True), ax=ax)
+    color = get_state(col, iid, "color", "skyblue")
+    kde = get_state(col, iid, "kde", True)
+    bins = get_state(col, iid, "bins", 20)
+    sns.histplot(data, bins=bins, kde=kde, color=color, ax=ax)
     render_to_dpg(fig, iid, parent)
 
 def draw_bar(data, col, iid, parent):
     fig = Figure(figsize=(6.4, 4.8)); ax = fig.add_subplot(111)
-    counts = data.value_counts().head(get_state(col, iid, "topn", 10))
-    sns.barplot(x=counts.values, y=counts.index.astype(str), ax=ax)
+    topn = get_state(col, iid, "topn", 10)
+    palette = get_state(col, iid, "palette", "magma")
+    counts = data.value_counts().head(topn)
+    sns.barplot(x=counts.values, y=counts.index.astype(str), palette=palette, ax=ax)
     fig.tight_layout(); render_to_dpg(fig, iid, parent)

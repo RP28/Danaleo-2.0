@@ -33,11 +33,15 @@ def add_plot(ptype, col, iid=None):
                 for ctrl in config["controls"]:
                     val = engine.get_state(col, iid, ctrl["key"], ctrl["default"])
                     u_data = (col, iid, ptype, ctrl["key"])
+                    
                     if ctrl["type"] == "checkbox":
                         dpg.add_checkbox(label=ctrl["label"], default_value=val, callback=_on_control_change, user_data=u_data)
                     elif ctrl["type"] == "slider_int":
                         dpg.add_slider_int(label=ctrl["label"], default_value=val, min_value=ctrl["min"], max_value=ctrl["max"], 
                                            width=100, callback=_on_control_change, user_data=u_data)
+                    elif ctrl["type"] == "combo":
+                        dpg.add_combo(items=ctrl["items"], label=ctrl["label"], default_value=val, 
+                                      width=100, callback=_on_control_change, user_data=u_data)
 
         with dpg.group(horizontal=True):
             q_tag = dpg.generate_uuid()
@@ -80,7 +84,6 @@ def open_view(column_name):
         dpg.add_group(tag="plot_stack")
         
         sessions_data = state.EXPLORE_SESSIONS.get(state.active_session, {}).get(column_name, {})
-        
         for iid, data in sessions_data.items():
             if data.get("type") in engine.PLOT_CONFIG:
                 add_plot(data["type"], column_name, iid)
