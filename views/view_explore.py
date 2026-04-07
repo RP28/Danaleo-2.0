@@ -66,7 +66,7 @@ def refresh_plot(ptype, col, iid):
     except Exception as e:
         if dpg.does_item_exist(f"cont_{iid}"):
             dpg.delete_item(f"cont_{iid}", children_only=True)
-            dpg.add_text(f"Error: {e}", parent=f"cont_{iid}", color=(255, 100, 100))
+            dpg.add_text(f"Filter Error: {e}", parent=f"cont_{iid}", color=(255, 100, 100))
 
 def open_view(column_name):
     if dpg.does_item_exist("explore_window"): 
@@ -74,9 +74,12 @@ def open_view(column_name):
     
     with dpg.child_window(tag="explore_window", parent="content_area", width=-1, border=True):
         col_data = state.df_global[column_name]
-        all_plots = list(engine.PLOT_CONFIG.keys())
         
-        opts = [p for p in all_plots if p != "Bar Chart (Top N)"] if pd.api.types.is_numeric_dtype(col_data) else ["Bar Chart (Top N)"]
+        opts = []
+        if pd.api.types.is_numeric_dtype(col_data):
+            opts = [k for k, v in engine.PLOT_CONFIG.items() if v.get("numeric_only")]
+        else:
+            opts = [k for k, v in engine.PLOT_CONFIG.items() if v.get("categorical_only")]
         
         with dpg.group(horizontal=True):
             dpg.add_combo(opts, tag="sel_plot", width=150, default_value=opts[0])

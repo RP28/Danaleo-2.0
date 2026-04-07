@@ -16,7 +16,8 @@ PLOT_CONFIG = {
             {"type": "checkbox", "label": "KDE", "key": "kde", "default": True},
             {"type": "combo", "label": "Color", "key": "color", "default": "skyblue", "items": ["skyblue", "salmon", "lightgreen", "gold", "orchid"]}
         ],
-        "requires_refresh_on_keys": ["query", "color", "kde", "bins"]
+        "requires_refresh_on_keys": ["query", "color", "kde", "bins"],
+        "numeric_only": True
     },
     "Boxplot": {
         "draw_func": lambda data, col, iid, parent: draw_box(data, col, iid, parent),
@@ -25,7 +26,8 @@ PLOT_CONFIG = {
             {"type": "combo", "label": "Palette", "key": "palette", "default": "Set2", "items": ["Set2", "Paired", "Accent", "Pastel1", "Dark2", "viridis", "rocket"]}
         ],
         "requires_refresh_on_keys": ["compare_mode", "query", "comp_queries", "palette"],
-        "extra_ui": lambda col, iid, refresh_cb: render_boxplot_ui(col, iid, refresh_cb)
+        "extra_ui": lambda col, iid, refresh_cb: render_boxplot_ui(col, iid, refresh_cb),
+        "numeric_only": True
     },
     "Bar Chart (Top N)": {
         "draw_func": lambda data, col, iid, parent: draw_bar(data, col, iid, parent),
@@ -33,7 +35,8 @@ PLOT_CONFIG = {
             {"type": "slider_int", "label": "Top N", "key": "topn", "default": 10, "min": 1, "max": 50},
             {"type": "combo", "label": "Palette", "key": "palette", "default": "magma", "items": ["magma", "viridis", "rocket", "mako", "crest"]}
         ],
-        "requires_refresh_on_keys": ["query", "topn", "palette"]
+        "requires_refresh_on_keys": ["query", "topn", "palette"],
+        "categorical_only": True
     }
 }
 
