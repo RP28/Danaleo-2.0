@@ -60,13 +60,14 @@ def add_plot(ptype, col, iid=None):
 def refresh_plot(ptype, col, iid):
     config = engine.PLOT_CONFIG.get(ptype)
     query = engine.get_state(col, iid, "query", "")
+    cont_tag = f"cont_{iid}"    
     try:
         data = state.df_global.query(query)[col].dropna() if query else state.df_global[col].dropna()
-        config["draw_func"](data, col, iid, f"cont_{iid}")
+        config["draw_func"](data, col, iid, cont_tag)
     except Exception as e:
-        if dpg.does_item_exist(f"cont_{iid}"):
-            dpg.delete_item(f"cont_{iid}", children_only=True)
-            dpg.add_text(f"Filter Error: {e}", parent=f"cont_{iid}", color=(255, 100, 100))
+        if dpg.does_item_exist(cont_tag):
+            dpg.delete_item(cont_tag, children_only=True)
+            dpg.add_text(f"Filter Error: {e}", parent=cont_tag, color=(255, 100, 100))
 
 def open_view(column_name):
     if dpg.does_item_exist("explore_window"): 

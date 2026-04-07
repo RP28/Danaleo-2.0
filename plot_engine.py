@@ -52,8 +52,23 @@ def save_state(col, iid, data_dict):
     state.EXPLORE_SESSIONS[sess][col][iid].update(data_dict)
 
 def _on_add_sub_q(sender, app_data, user_data):
-    col, iid, input_tag, refresh_cb = user_data
+    col, iid, input_tag, error_tag, refresh_cb = user_data
     val = dpg.get_value(input_tag)
+    base_query = get_state(col, iid, "query", "")    
+    parts = [q for q in [base_query, val] if q and q.strip()]
+    final_q = " and ".join(f"({q})" for q in parts)
+    try:
+        test_data = state.df_global.query(final_q) if final_q else state.df_global
+        if test_data.empty:
+            dpg.set_value(error_tag, "Filter Error: Query returned no data")
+            dpg.show_item(error_tag)
+            return 
+    except Exception as e:
+        dpg.set_value(error_tag, f"Filter Error: {str(e)}")
+        dpg.show_item(error_tag)
+        return
+
+    dpg.hide_item(error_tag)
     queries = get_state(col, iid, "comp_queries", [])
     queries.append(val)
     save_state(col, iid, {"comp_queries": queries})
@@ -83,11 +98,12 @@ def render_boxplot_ui(col, iid, refresh_cb):
                                user_data=(col, iid, idx, refresh_cb)), tm.DANGER)
         
         comp_in = dpg.generate_uuid()
+        err_out = dpg.add_text("", color=(255, 100, 100), show=False)
         with dpg.group(horizontal=True):
             dpg.add_input_text(hint="Add refinement...", tag=comp_in, width=150)
             dpg.bind_item_theme(dpg.add_button(label="Add", 
                            callback=_on_add_sub_q, 
-                           user_data=(col, iid, comp_in, refresh_cb)), tm.PRIMARY)
+                           user_data=(col, iid, comp_in, err_out, refresh_cb)), tm.PRIMARY)
 
 def draw_box(data, col, iid, parent):
     fig = Figure(figsize=(6.4, 4.8))
@@ -103,16 +119,14 @@ def draw_box(data, col, iid, parent):
             parts = [q for q in [base_query, sub_q] if q and q.strip()]
             final_q = " and ".join(f"({q})" for q in parts)
             label = sub_q if sub_q.strip() else "Base"
-            try:
-                subset = state.df_global.query(final_q)[col].dropna() if final_q else state.df_global[col].dropna()
-                if not subset.empty: plot_data[label] = subset
-            except: continue
+            
+            subset = state.df_global.query(final_q)[col].dropna() if final_q else state.df_global[col].dropna()
+            if subset.empty:
+                raise ValueError(f"Sub-query '{label}' returned no data.")
+            plot_data[label] = subset
         
-        if plot_data:
-            combined_df = pd.concat([pd.Series(v.values, name=k) for k, v in plot_data.items()], axis=1)
-            sns.boxplot(data=combined_df, ax=ax, palette=palette_name, orient="h")
-        else:
-            ax.text(0.5, 0.5, "No valid data", ha='center')
+        combined_df = pd.concat([pd.Series(v.values, name=k) for k, v in plot_data.items()], axis=1)
+        sns.boxplot(data=combined_df, ax=ax, palette=palette_name, orient="h")
     else:
         sns.boxplot(x=data, ax=ax, palette=palette_name)
     
