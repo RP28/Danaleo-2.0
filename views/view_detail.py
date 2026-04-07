@@ -13,7 +13,8 @@ def open_view(col):
         dpg.add_text(f"Type: {state.df_global[col].dtype}")
         
         dpg.add_separator()
-        dpg.add_input_text(tag="filter_query", hint="Filter query...", width=-1)
+        dpg.add_input_text(tag="filter_query", hint="Filter query (e.g. col > 10)", width=-1)
+        dpg.add_text("", tag="query_error_text", color=(255, 100, 100), wrap=240)
         dpg.bind_item_theme(dpg.add_button(label="Apply Filter", width=-1, 
                                            callback=lambda: confirm_action("Filter", "Filter dataset?", apply_filter)), tm.SECONDARY)
         
@@ -27,13 +28,17 @@ def open_view(col):
 
 def apply_filter(data):
     query = dpg.get_value("filter_query")
+    if dpg.does_item_exist("query_error_text"):
+        dpg.set_value("query_error_text", "")
     if query:
         try:
             state.df_global = state.df_global.query(query)  
             view_main.slide_back()
             view_main.build_list()            
         except Exception as e:
-            print(f"Filter Error: {e}")
+            error_msg = f"Filter Error: {str(e)}"
+            if dpg.does_item_exist("query_error_text"):
+                dpg.set_value("query_error_text", error_msg)
 
 def drop_col(col):
     state.df_global = state.df_global.drop(columns=[col])
