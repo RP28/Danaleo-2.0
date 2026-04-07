@@ -2,6 +2,7 @@ import dearpygui.dearpygui as dpg
 import state
 import plot_engine as engine
 import theme_manager as tm
+import pandas as pd
 
 def _on_control_change(sender, app_data, user_data):
     col, iid, ptype, key = user_data
@@ -27,7 +28,6 @@ def add_plot(ptype, col, iid=None):
     dpg.delete_item(iid, children_only=True)
 
     with dpg.group(parent=iid):
-        # 1. Registry Controls
         if config.get("controls"):
             with dpg.group(horizontal=True):
                 for ctrl in config["controls"]:
@@ -39,19 +39,16 @@ def add_plot(ptype, col, iid=None):
                         dpg.add_slider_int(label=ctrl["label"], default_value=val, min_value=ctrl["min"], max_value=ctrl["max"], 
                                            width=100, callback=_on_control_change, user_data=u_data)
 
-        # 2. Generic Global Filter
         with dpg.group(horizontal=True):
             q_tag = dpg.generate_uuid()
             dpg.add_input_text(hint="Base Filter...", tag=q_tag, width=150, default_value=engine.get_state(col, iid, "query", ""))
             dpg.add_button(label="Apply", callback=lambda: _on_control_change(None, dpg.get_value(q_tag), (col, iid, ptype, "query")))
 
-        # 3. Dynamic Extra UI
         if "extra_ui" in config:
-            # We pass a callback that add_plot can use without triggering it instantly
             config["extra_ui"](col, iid, lambda: add_plot(ptype, col, iid))
 
         dpg.add_group(tag=f"cont_{iid}")
-        dpg.bind_item_theme(dpg.add_button(label="Delete", callback=lambda: dpg.delete_item(iid)), tm.DANGER)
+        dpg.bind_item_theme(dpg.add_button(label="Delete plot", callback=lambda: dpg.delete_item(iid)), tm.DANGER)
         refresh_plot(ptype, col, iid)
 
 def refresh_plot(ptype, col, iid):
@@ -66,10 +63,24 @@ def refresh_plot(ptype, col, iid):
             dpg.add_text(f"Error: {e}", parent=f"cont_{iid}", color=(255, 100, 100))
 
 def open_view(column_name):
-    if dpg.does_item_exist("explore_window"): dpg.delete_item("explore_window")
+    if dpg.does_item_exist("explore_window"): 
+        dpg.delete_item("explore_window")
+    
     with dpg.child_window(tag="explore_window", parent="content_area", width=-1, border=True):
-        opts = list(engine.PLOT_CONFIG.keys())
+        col_data = state.df_global[column_name]
+        all_plots = list(engine.PLOT_CONFIG.keys())
+        
+        opts = [p for p in all_plots if p != "Bar Chart (Top N)"] if pd.api.types.is_numeric_dtype(col_data) else ["Bar Chart (Top N)"]
+        
         with dpg.group(horizontal=True):
             dpg.add_combo(opts, tag="sel_plot", width=150, default_value=opts[0])
-            dpg.add_button(label="Add Plot", callback=lambda: add_plot(dpg.get_value("sel_plot"), column_name))
+            dpg.add_button(label="Add Plot", 
+                           callback=lambda: add_plot(dpg.get_value("sel_plot"), column_name))
+
         dpg.add_group(tag="plot_stack")
+        
+        sessions_data = state.EXPLORE_SESSIONS.get(state.active_session, {}).get(column_name, {})
+        
+        for iid, data in sessions_data.items():
+            if data.get("type") in engine.PLOT_CONFIG:
+                add_plot(data["type"], column_name, iid)

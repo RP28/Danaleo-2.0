@@ -5,6 +5,7 @@ from matplotlib.figure import Figure
 import seaborn as sns
 import dearpygui.dearpygui as dpg
 import state
+import theme_manager as tm
 
 # --- Centralized Registry ---
 PLOT_CONFIG = {
@@ -35,6 +36,8 @@ PLOT_CONFIG = {
     }
 }
 
+_textures = {}
+
 def get_state(col, iid, key, default):
     return state.EXPLORE_SESSIONS.get(state.active_session, {}).get(col, {}).get(iid, {}).get(key, default)
 
@@ -44,7 +47,6 @@ def save_state(col, iid, data_dict):
     state.EXPLORE_SESSIONS.setdefault(sess, {}).setdefault(col, {}).setdefault(iid, {})
     state.EXPLORE_SESSIONS[sess][col][iid].update(data_dict)
 
-# --- Boxplot Sub-plot Callbacks ---
 def _on_add_sub_q(sender, app_data, user_data):
     col, iid, input_tag, refresh_cb = user_data
     val = dpg.get_value(input_tag)
@@ -72,9 +74,9 @@ def render_boxplot_ui(col, iid, refresh_cb):
         for idx, q in enumerate(comp_queries):
             with dpg.group(horizontal=True):
                 dpg.add_text(f"- {q if q.strip() else 'Base Only'}")
-                dpg.add_button(label="Remove", small=True, 
+                dpg.bind_item_theme(dpg.add_button(label="Remove", small=True, 
                                callback=_on_remove_sub_q, 
-                               user_data=(col, iid, idx, refresh_cb))
+                               user_data=(col, iid, idx, refresh_cb)), tm.DANGER)
         
         comp_in = dpg.generate_uuid()
         with dpg.group(horizontal=True):
@@ -128,7 +130,6 @@ def render_to_dpg(fig, iid, parent):
         dpg.add_image(tex_tag, width=350, height=260, parent=parent)    
     buf.close()
 
-_textures = {}
 def draw_hist(data, col, iid, parent):
     fig = Figure(figsize=(6.4, 4.8)); ax = fig.add_subplot(111)
     sns.histplot(data, bins=get_state(col, iid, "bins", 20), kde=get_state(col, iid, "kde", True), ax=ax)
