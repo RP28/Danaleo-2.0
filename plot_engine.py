@@ -18,7 +18,9 @@ PLOT_CONFIG = {
     },
     "Boxplot": {
         "draw_func": lambda data, col, iid, parent: draw_box(data, col, iid, parent),
-        "controls": []
+        "controls": [
+            {"type": "checkbox", "label": "Compare Mode", "key": "compare_mode", "default": False}
+        ]
     },
     "Bar Chart (Top N)": {
         "draw_func": lambda data, col, iid, parent: draw_bar(data, col, iid, parent),
@@ -76,7 +78,36 @@ def draw_hist(data, col, iid, parent):
 def draw_box(data, col, iid, parent):
     fig = Figure(figsize=(6.4, 4.8))
     ax = fig.add_subplot(111)
-    sns.boxplot(x=data, color="salmon", ax=ax)
+    
+    compare_mode = get_state(col, iid, "compare_mode", False)
+    comp_queries = get_state(col, iid, "comp_queries", [])
+    base_query = get_state(col, iid, "query", "")
+
+    if compare_mode and comp_queries:
+        plot_data = {}
+        for sub_q in comp_queries:
+            try:
+                final_q_list = [q for q in [base_query, sub_q] if q and q.strip()]
+                final_q = " and ".join(f"({q})" for q in final_q_list)
+                
+                label = sub_q if sub_q.strip() else "Base Filter"
+                subset = state.df_global.query(final_q)[col].dropna() if final_q else state.df_global[col].dropna()
+                
+                if not subset.empty:
+                    plot_data[label] = subset
+            except Exception as e:
+                continue
+        
+        if plot_data:
+            combined_df = pd.concat([pd.Series(v.values, name=k) for k, v in plot_data.items()], axis=1)
+            sns.boxplot(data=combined_df, ax=ax, palette="Set2")
+            ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+        else:
+            ax.text(0.5, 0.5, "No valid data for combined filters", ha='center')
+    else:
+        sns.boxplot(x=data, color="salmon", ax=ax)
+    
+    fig.tight_layout()
     render_to_dpg(fig, iid, parent)
 
 def draw_bar(data, col, iid, parent):

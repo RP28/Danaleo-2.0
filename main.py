@@ -8,10 +8,10 @@ def on_upload(sender, app_data):
     try:
         state.df_global = pd.read_csv(path) if path.endswith('.csv') else pd.read_excel(path)
         state.sessions = {
-            "Session 1": state.df_global.copy()
+            "Base Session": state.df_global.copy()
         }
-        state.active_session = "Session 1"
-        
+        state.active_session = "Base Session"
+
         dpg.hide_item("upload_win")
         dpg.show_item("main_window")
         dpg.set_primary_window("main_window", True)
