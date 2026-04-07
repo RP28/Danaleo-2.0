@@ -107,8 +107,9 @@ def draw_box(data, col, iid, parent):
         
         if plot_data:
             combined_df = pd.concat([pd.Series(v.values, name=k) for k, v in plot_data.items()], axis=1)
-            sns.boxplot(data=combined_df, ax=ax, palette=palette_name)
-            ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+            sns.boxplot(data=combined_df, ax=ax, palette=palette_name, orient="h")
+        else:
+            ax.text(0.5, 0.5, "No valid data", ha='center')
     else:
         sns.boxplot(x=data, ax=ax, palette=palette_name)
     
