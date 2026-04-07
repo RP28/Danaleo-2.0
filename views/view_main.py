@@ -13,9 +13,9 @@ def build_list():
             dpg.add_text(f"Total records: {len(state.df_global)}")
             with dpg.group(horizontal=True):
                 dpg.add_combo(list(state.sessions.keys()), tag="session_sel", width=150, default_value=state.active_session)
-                dpg.add_button(label="Load", callback=lambda: switch_session(dpg.get_value("session_sel")))
+                dpg.bind_item_theme(dpg.add_button(label="Load", callback=lambda: switch_session(dpg.get_value("session_sel"))), tm.PRIMARY)
                 dpg.add_input_text(tag="new_session_name", hint="Session Name...", width=120)
-                dpg.add_button(label="Create Session", callback=save_session)
+                dpg.bind_item_theme(dpg.add_button(label="Create Session", callback=save_session), tm.PRIMARY)
 
         dpg.add_separator()
         
