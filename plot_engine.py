@@ -82,9 +82,9 @@ def render_boxplot_ui(col, iid, refresh_cb):
         comp_in = dpg.generate_uuid()
         with dpg.group(horizontal=True):
             dpg.add_input_text(hint="Add refinement...", tag=comp_in, width=150)
-            dpg.add_button(label="Add", 
+            dpg.bind_item_theme(dpg.add_button(label="Add", 
                            callback=_on_add_sub_q, 
-                           user_data=(col, iid, comp_in, refresh_cb))
+                           user_data=(col, iid, comp_in, refresh_cb)), tm.PRIMARY)
 
 def draw_box(data, col, iid, parent):
     fig = Figure(figsize=(6.4, 4.8))

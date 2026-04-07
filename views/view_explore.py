@@ -46,7 +46,9 @@ def add_plot(ptype, col, iid=None):
         with dpg.group(horizontal=True):
             q_tag = dpg.generate_uuid()
             dpg.add_input_text(hint="Base Filter...", tag=q_tag, width=150, default_value=engine.get_state(col, iid, "query", ""))
-            dpg.add_button(label="Apply", callback=lambda: _on_control_change(None, dpg.get_value(q_tag), (col, iid, ptype, "query")))
+            dpg.bind_item_theme(
+                dpg.add_button(label="Apply", callback=lambda: _on_control_change(None, dpg.get_value(q_tag), (col, iid, ptype, "query"))), 
+                tm.PRIMARY)
 
         if "extra_ui" in config:
             config["extra_ui"](col, iid, lambda: add_plot(ptype, col, iid))
@@ -78,8 +80,9 @@ def open_view(column_name):
         
         with dpg.group(horizontal=True):
             dpg.add_combo(opts, tag="sel_plot", width=150, default_value=opts[0])
-            dpg.add_button(label="Add Plot", 
-                           callback=lambda: add_plot(dpg.get_value("sel_plot"), column_name))
+            dpg.bind_item_theme(dpg.add_button(label="Add Plot", 
+                           callback=lambda: add_plot(dpg.get_value("sel_plot"), column_name)), 
+                           tm.PRIMARY)
 
         dpg.add_group(tag="plot_stack")
         
