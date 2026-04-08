@@ -43,13 +43,13 @@ PLOT_CONFIG = {
 _textures = {}
 
 def get_state(col, iid, key, default):
-    return state.EXPLORE_SESSIONS.get(state.active_session, {}).get(col, {}).get(iid, {}).get(key, default)
+    return state.explore_sessions.get(state.active_session, {}).get(col, {}).get(iid, {}).get(key, default)
 
 def save_state(col, iid, data_dict):
     sess = state.active_session
     if not sess: return
-    state.EXPLORE_SESSIONS.setdefault(sess, {}).setdefault(col, {}).setdefault(iid, {})
-    state.EXPLORE_SESSIONS[sess][col][iid].update(data_dict)
+    state.explore_sessions.setdefault(sess, {}).setdefault(col, {}).setdefault(iid, {})
+    state.explore_sessions[sess][col][iid].update(data_dict)
 
 def _on_add_sub_q(sender, app_data, user_data):
     col, iid, input_tag, error_tag, refresh_cb = user_data

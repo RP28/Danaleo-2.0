@@ -7,10 +7,18 @@ def on_upload(sender, app_data):
     path = list(app_data['selections'].values())[0]
     try:
         state.df_global = pd.read_csv(path) if path.endswith('.csv') else pd.read_excel(path)
-        state.sessions = {
-            "Base Session": state.df_global.copy()
-        }
         state.active_session = "Base Session"
+        state.current_time = 0
+        state.sessions = {
+            "Base Session": {
+                "data": state.df_global.copy(),
+                "parent": None,
+                "operations": [{
+                    "type": "created session",
+                    "time": state.current_time
+                }]
+            }
+        }
 
         dpg.hide_item("upload_win")
         dpg.show_item("main_window")

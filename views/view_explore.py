@@ -90,7 +90,7 @@ def open_view(column_name):
 
         dpg.add_group(tag="plot_stack")
         
-        sessions_data = state.EXPLORE_SESSIONS.get(state.active_session, {}).get(column_name, {})
+        sessions_data = state.explore_sessions.get(state.active_session, {}).get(column_name, {})
         for iid, data in sessions_data.items():
             if data.get("type") in engine.PLOT_CONFIG:
                 add_plot(data["type"], column_name, iid)
