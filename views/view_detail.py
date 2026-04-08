@@ -33,6 +33,13 @@ def apply_filter(data):
     if query:
         try:
             state.df_global = state.df_global.query(query)  
+            state.current_time += 1
+            state.sessions[state.active_session]["data"] = state.df_global.copy()
+            state.sessions[state.active_session]["operations"].append({
+                "type": "filter", 
+                "query": query, 
+                "time": state.current_time
+            })
             view_main.slide_back()
             view_main.build_list()            
         except Exception as e:
@@ -42,5 +49,12 @@ def apply_filter(data):
 
 def drop_col(col):
     state.df_global = state.df_global.drop(columns=[col])
+    state.current_time += 1
+    state.sessions[state.active_session]["data"] = state.df_global.copy()
+    state.sessions[state.active_session]["operations"].append({
+        "type": "drop_col", 
+        "column": col, 
+        "time": state.current_time
+    })
     view_main.slide_back()
     view_main.build_list()
