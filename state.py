@@ -6,3 +6,4 @@ current_time = None
 active_session = None
 current_column = None
 explore_sessions = {}
+saved_plots = {}

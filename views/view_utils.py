@@ -14,6 +14,48 @@ def confirm_action(title, message, callback, user_data=None):
                                                callback=lambda: (callback(user_data), dpg.delete_item("confirm_modal"))), tm.DANGER)
             dpg.bind_item_theme(dpg.add_button(label="Cancel", width=120, 
                                                callback=lambda: dpg.delete_item("confirm_modal")), tm.SECONDARY)
+
+def input_modal(title, message, callback, user_data, current_names=[]):
+    if dpg.does_item_exist("input_modal"): dpg.delete_item("input_modal")
+    
+    with dpg.window(label=title, tag="input_modal", modal=True, pos=[400, 300], width=300):
+        dpg.add_text(message)
+        name_input = dpg.add_input_text(hint="Enter name here...")        
+        dpg.add_text("", tag="modal_error_msg", color=(255, 100, 100))
+        dpg.add_spacer(height=10)
+        with dpg.group(horizontal=True):
+            dpg.add_button(label="Save", width=120, 
+                        callback=lambda: _validate_input_name(callback, dpg.get_value(name_input), user_data, current_names))
+            dpg.add_button(label="Cancel", width=120, 
+                        callback=lambda: dpg.delete_item("input_modal"))
+
+def _validate_input_name(callback, name_input, user_data, current_names):
+    name_input = name_input.strip()
+    if not name_input:
+        dpg.set_value("modal_error_msg", "Name cannot be empty.")
+        return 
+    if name_input in current_names:
+        dpg.set_value("modal_error_msg", "Name already exists.")
+        return 
+    callback(name_input, *user_data)
+    if dpg.does_item_exist("input_modal"):
+        dpg.delete_item("input_modal")
+
+def show_plot_zoom(img_data):
+    if dpg.does_item_exist("zoom_window"):dpg.delete_item("zoom_window")
+    if not dpg.does_item_exist("main_texture_registry"):
+        dpg.add_texture_registry(tag="main_texture_registry")
+    texture_tag = dpg.generate_uuid()    
+    dpg.add_static_texture(
+        width=512, 
+        height=384, 
+        default_value=img_data, 
+        tag=texture_tag, 
+        parent="main_texture_registry"
+    )    
+    with dpg.window(label="Plot Zoom", tag="zoom_window", modal=True, show=True, pos=[200, 150], width=550, height=450):
+        dpg.add_image(texture_tag)
+
 def show_session_graph():
     if dpg.does_item_exist("session_graph_win"):
         dpg.delete_item("session_graph_win")    
