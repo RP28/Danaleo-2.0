@@ -53,7 +53,7 @@ def show_plot_zoom(img_data):
         tag=texture_tag, 
         parent="main_texture_registry"
     )    
-    with dpg.window(label="Plot Zoom", tag="zoom_window", modal=True, show=True, pos=[200, 150], width=550, height=450):
+    with dpg.window(label="Plot Zoom", tag="zoom_window", modal=True, show=True, pos=[200, 150], width=550, height=420):
         dpg.add_image(texture_tag)
 
 def show_session_graph():
