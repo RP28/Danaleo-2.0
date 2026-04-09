@@ -2,7 +2,8 @@ import dearpygui.dearpygui as dpg
 import state
 import theme_manager as tm
 from views import view_explore, view_main
-from views.view_utils import confirm_action
+from views.view_utils import confirm_action, show_plot_zoom
+import constants as const
 
 def open_view(col):
     state.current_column = col
@@ -20,11 +21,22 @@ def open_view(col):
         
         dpg.add_separator()
         with dpg.group(horizontal=True):
-            dpg.bind_item_theme(dpg.add_button(label="Explore", callback=lambda: view_explore.open_view(col)), tm.PRIMARY)
+            dpg.bind_item_theme(dpg.add_button(label="Explore", callback=lambda: view_explore.open_explore(col)), tm.PRIMARY)
             dpg.bind_item_theme(dpg.add_button(label="Drop", callback=lambda: confirm_action("Drop", f"Delete {col}?", drop_col, col)), tm.DANGER)
         
         dpg.add_spacer(height=5)
         dpg.bind_item_theme(dpg.add_button(label="Back", width=-1, callback=lambda: view_main.slide_back()), tm.SECONDARY)
+
+        dpg.add_separator()
+        with dpg.child_window(label="Saved plots", width=-1, height=-1, border=True):
+            plt_infos = state.saved_plots.get(state.active_session, {}).get(col, {})
+            if len(plt_infos) != 0:
+                dpg.add_text("Saved Plots", color=(100, 200, 255))
+                for plt_info in plt_infos:
+                    dpg.add_button(label=plt_info["name"], 
+                                   width=const.BUTTON_WIDTH, 
+                                   callback=lambda s, a, u: show_plot_zoom(u), 
+                                   user_data=plt_info["data"])
 
 def apply_filter(data):
     query = dpg.get_value("filter_query")

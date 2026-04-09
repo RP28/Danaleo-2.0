@@ -10,17 +10,17 @@ import theme_manager as tm
 # --- Centralized Registry ---
 PLOT_CONFIG = {
     "Histogram": {
-        "draw_func": lambda data, col, iid, parent: draw_hist(data, col, iid, parent),
+        "draw_func": lambda data, col, iid, parent, save_name: draw_hist(data, col, iid, parent, save_name),
         "controls": [
             {"type": "slider_int", "label": "Bins", "key": "bins", "default": 20, "min": 5, "max": 100},
             {"type": "checkbox", "label": "KDE", "key": "kde", "default": True},
             {"type": "combo", "label": "Color", "key": "color", "default": "skyblue", "items": ["skyblue", "salmon", "lightgreen", "gold", "orchid"]}
         ],
-        "requires_refresh_on_keys": ["query", "color", "kde", "bins"],
+        "requires_refresh_on_keys": ["query", "color", "kde"],
         "numeric_only": True
     },
     "Boxplot": {
-        "draw_func": lambda data, col, iid, parent: draw_box(data, col, iid, parent),
+        "draw_func": lambda data, col, iid, parent, save_name: draw_box(data, col, iid, parent, save_name),
         "controls": [
             {"type": "checkbox", "label": "Compare Mode", "key": "compare_mode", "default": False},
             {"type": "combo", "label": "Palette", "key": "palette", "default": "Set2", "items": ["Set2", "Paired", "Accent", "Pastel1", "Dark2", "viridis", "rocket"]}
@@ -30,7 +30,7 @@ PLOT_CONFIG = {
         "numeric_only": True
     },
     "Bar Chart (Top N)": {
-        "draw_func": lambda data, col, iid, parent: draw_bar(data, col, iid, parent),
+        "draw_func": lambda data, col, iid, parent, save_name: draw_bar(data, col, iid, parent, save_name),
         "controls": [
             {"type": "slider_int", "label": "Top N", "key": "topn", "default": 10, "min": 1, "max": 50},
             {"type": "combo", "label": "Palette", "key": "palette", "default": "magma", "items": ["magma", "viridis", "rocket", "mako", "crest"]}
@@ -105,7 +105,7 @@ def render_boxplot_ui(col, iid, refresh_cb):
                            callback=_on_add_sub_q, 
                            user_data=(col, iid, comp_in, err_out, refresh_cb)), tm.PRIMARY)
 
-def draw_box(data, col, iid, parent):
+def draw_box(data, col, iid, parent, save_name=None):
     fig = Figure(figsize=(6.4, 4.8))
     ax = fig.add_subplot(111)
     compare_mode = get_state(col, iid, "compare_mode", False)
@@ -131,13 +131,17 @@ def draw_box(data, col, iid, parent):
         sns.boxplot(x=data, ax=ax, palette=palette_name)
     
     fig.tight_layout()
-    render_to_dpg(fig, iid, parent)
+    return render_to_dpg(fig, iid, parent, save_name)
 
-def render_to_dpg(fig, iid, parent):
+def render_to_dpg(fig, iid, parent, save_name=None):
     buf = io.BytesIO()
     fig.savefig(buf, format='rgba', dpi=80)
     buf.seek(0)
     img_data = np.frombuffer(buf.getvalue(), dtype=np.uint8) / 255.0
+    if save_name:
+        session = state.saved_plots.setdefault(state.active_session, {})        
+        column_plots = session.setdefault(state.current_column, [])        
+        column_plots.append({"name": save_name, "data": img_data})
     if iid in _textures and dpg.does_item_exist(_textures[iid]):
         dpg.delete_item(_textures[iid])
     tex_tag = dpg.generate_uuid()
@@ -149,19 +153,21 @@ def render_to_dpg(fig, iid, parent):
         dpg.delete_item(parent, children_only=True)
         dpg.add_image(tex_tag, width=350, height=260, parent=parent)    
     buf.close()
+    return img_data
 
-def draw_hist(data, col, iid, parent):
+def draw_hist(data, col, iid, parent, save_name=None):
     fig = Figure(figsize=(6.4, 4.8)); ax = fig.add_subplot(111)
     color = get_state(col, iid, "color", "skyblue")
     kde = get_state(col, iid, "kde", True)
     bins = get_state(col, iid, "bins", 20)
     sns.histplot(data, bins=bins, kde=kde, color=color, ax=ax)
-    render_to_dpg(fig, iid, parent)
+    return render_to_dpg(fig, iid, parent, save_name)
 
-def draw_bar(data, col, iid, parent):
+def draw_bar(data, col, iid, parent, save_name=None):
     fig = Figure(figsize=(6.4, 4.8)); ax = fig.add_subplot(111)
     topn = get_state(col, iid, "topn", 10)
     palette = get_state(col, iid, "palette", "magma")
     counts = data.value_counts().head(topn)
     sns.barplot(x=counts.values, y=counts.index.astype(str), palette=palette, ax=ax)
-    fig.tight_layout(); render_to_dpg(fig, iid, parent)
+    fig.tight_layout()
+    return render_to_dpg(fig, iid, parent, save_name)

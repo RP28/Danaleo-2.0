@@ -3,6 +3,7 @@ import state
 import plot_engine as engine
 import theme_manager as tm
 import pandas as pd
+from views import view_utils
 
 def _on_control_change(sender, app_data, user_data):
     col, iid, ptype, key = user_data
@@ -12,7 +13,7 @@ def _on_control_change(sender, app_data, user_data):
     if key in config.get("requires_refresh_on_keys", []):
         add_plot(ptype, col, iid)
     else:
-        refresh_plot(ptype, col, iid)
+        refresh_plot(ptype, col, iid, None)
 
 def add_plot(ptype, col, iid=None):
     is_new = iid is None
@@ -53,23 +54,50 @@ def add_plot(ptype, col, iid=None):
         if "extra_ui" in config:
             config["extra_ui"](col, iid, lambda: add_plot(ptype, col, iid))
 
-        dpg.add_group(tag=f"cont_{iid}")
-        dpg.bind_item_theme(dpg.add_button(label="Delete plot", callback=lambda: dpg.delete_item(iid)), tm.DANGER)
-        refresh_plot(ptype, col, iid)
+        with dpg.group(horizontal=True):
+            dpg.add_group(tag=f"cont_{iid}")
+            img_data = refresh_plot(ptype, col, iid, None)
+            with dpg.group(horizontal=False):
+                dpg.bind_item_theme(dpg.add_button(label="Save Plot", 
+                    callback=lambda: view_utils.input_modal(
+                        "Save Plot", 
+                        "Enter image name:", 
+                        _save_plot,
+                        (ptype, col, iid),
+                        [plot["name"] 
+                        for column_plots in state.saved_plots.get(state.active_session, {}).values() 
+                         for plot in column_plots]
+                    )), tm.PRIMARY)
+                dpg.bind_item_theme(dpg.add_button(label="Zoom", 
+                    callback=lambda s, a, u: view_utils.show_plot_zoom(u), 
+                    user_data=img_data), 
+                    tm.PRIMARY)
+            
+        dpg.bind_item_theme(dpg.add_button(label="Delete plot", 
+                                            callback=lambda: dpg.delete_item(iid)), 
+                                            tm.DANGER)
 
-def refresh_plot(ptype, col, iid):
+def _save_plot(save_name, ptype, col, iid):
+    from views.view_detail import open_view
+    refresh_plot(ptype, col, iid, save_name)
+    open_view(col)
+    open_explore(col)
+
+def refresh_plot(ptype, col, iid, save_name):
     config = engine.PLOT_CONFIG.get(ptype)
     query = engine.get_state(col, iid, "query", "")
-    cont_tag = f"cont_{iid}"    
+    cont_tag = f"cont_{iid}"
+    img_data = None    
     try:
         data = state.df_global.query(query)[col].dropna() if query else state.df_global[col].dropna()
-        config["draw_func"](data, col, iid, cont_tag)
+        img_data = config["draw_func"](data, col, iid, cont_tag, save_name)
     except Exception as e:
         if dpg.does_item_exist(cont_tag):
             dpg.delete_item(cont_tag, children_only=True)
             dpg.add_text(f"Filter Error: {e}", parent=cont_tag, color=(255, 100, 100))
+    return img_data
 
-def open_view(column_name):
+def open_explore(column_name):
     if dpg.does_item_exist("explore_window"): 
         dpg.delete_item("explore_window")
     
