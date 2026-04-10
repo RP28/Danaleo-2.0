@@ -1,3 +1,4 @@
+import pickle
 import dearpygui.dearpygui as dpg
 import state
 import theme_manager as tm
@@ -6,6 +7,11 @@ from views import view_utils
 import constants as const
 
 anim = animation.AnimationState()
+
+if not dpg.does_item_exist("save_explorations"):
+    with dpg.file_dialog(label="Save As", show=False, callback=lambda s, a: _save_explorations(s, a), 
+        tag="save_explorations", width=600, height=400):
+        dpg.add_file_extension(".pkl")
 
 def build_list():
     if dpg.does_item_exist("main_layout"): dpg.delete_item("main_layout")
@@ -19,6 +25,7 @@ def build_list():
                 dpg.add_input_text(tag="new_session_name", hint="Session Name...", width=120)
                 dpg.bind_item_theme(dpg.add_button(label="Create Session", callback=save_session), tm.PRIMARY)
                 dpg.bind_item_theme(dpg.add_button(label="Session Timeline", callback=view_utils.show_session_graph), tm.SECONDARY)
+            dpg.bind_item_theme(dpg.add_button(label="Save Explorations", callback=lambda: dpg.show_item("save_explorations")), tm.SECONDARY)
 
         dpg.add_separator()
         
@@ -73,3 +80,19 @@ def save_session():
 def close_all_subviews():
     if dpg.does_item_exist("col_detail"): dpg.delete_item("col_detail")
     if dpg.does_item_exist("explore_window"): dpg.delete_item("explore_window")
+
+def _save_explorations(sender, app_data):
+    selected_path = app_data['file_path_name']
+
+    save_data = {
+        "sessions": state.sessions,
+        "current_time": state.current_time,
+        "active_session": state.active_session,
+        "current_column": state.current_column,
+        "explore_sessions": state.explore_sessions,
+        "saved_plots": state.saved_plots,
+        "df_global": state.df_global
+    }
+
+    with open(selected_path, 'wb') as f: 
+        pickle.dump(save_data, f)
