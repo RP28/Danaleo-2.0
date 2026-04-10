@@ -46,7 +46,7 @@ def add_plot(ptype, col, iid=None):
 
         with dpg.group(horizontal=True):
             q_tag = dpg.generate_uuid()
-            dpg.add_input_text(hint="Base Filter...", tag=q_tag, width=150, default_value=engine.get_state(col, iid, "query", ""))
+            dpg.add_input_text(hint="Plot Query (e.g. col > 10)", tag=q_tag, width=150, default_value=engine.get_state(col, iid, "query", ""))
             dpg.bind_item_theme(
                 dpg.add_button(label="Apply", callback=lambda: _on_control_change(None, dpg.get_value(q_tag), (col, iid, ptype, "query"))), 
                 tm.PRIMARY)
@@ -116,6 +116,7 @@ def open_explore(column_name):
                            callback=lambda: add_plot(dpg.get_value("sel_plot"), column_name)), 
                            tm.PRIMARY)
 
+        dpg.add_separator()
         dpg.add_group(tag="plot_stack")
         
         sessions_data = state.explore_sessions.get(state.active_session, {}).get(column_name, {})

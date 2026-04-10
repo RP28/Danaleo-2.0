@@ -35,7 +35,7 @@ PLOT_CONFIG = {
             {"type": "slider_int", "label": "Top N", "key": "topn", "default": 10, "min": 1, "max": 50},
             {"type": "combo", "label": "Palette", "key": "palette", "default": "magma", "items": ["magma", "viridis", "rocket", "mako", "crest"]}
         ],
-        "requires_refresh_on_keys": ["query", "topn", "palette"],
+        "requires_refresh_on_keys": ["query", "palette"],
         "categorical_only": True
     }
 }
