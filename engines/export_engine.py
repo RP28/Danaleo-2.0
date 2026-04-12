@@ -63,8 +63,7 @@ df.head()'''))
 
 def _add_session_operation(cells, session_operation):
     session_name, op = session_operation
-    session_name = session_name.replace(" ", "_")
-    data = "df" if session_name == "Base Session" else f"df_{session_name}"
+    data = "df" if session_name == "Base Session" else f"df_{session_name.replace(" ", "_")}"
     match op["type"]:
         case "created session":
             if session_name == "Base Session":
@@ -81,8 +80,7 @@ df_{session_name} = {parent_data}.copy()'''))
 {data} = {data}.drop(columns=["{op['column']}"])'''))
                 
 def _add_plot_operation(cells, plot_data):
-    session = plot_data["session"].replace(" ", "_")
-    data = "df" if plot_data["session"] == "Base Session" else f"df_{session}"
+    data = "df" if plot_data["session"] == "Base Session" else f"df_{plot_data["session"].replace(" ", "_")}"
     code = '''
 fig, ax = plt.subplots(figsize=(6.4, 4.8))'''
     match plot_data["type"]:
