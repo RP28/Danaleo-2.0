@@ -69,8 +69,9 @@ def _add_session_operation(cells, session_operation):
             if session_name == "Base Session":
                 return
             else:
+                parent_data = "df" if state.sessions[session_name]["parent"] == "Base Session" else f"df_{state.sessions[session_name]['parent']}"
                 cells.append(nbf.v4.new_code_cell(f'''
-df_{session_name} = df.copy()'''))
+df_{session_name} = {parent_data}.copy()'''))
         case "filter":
             cells.append(nbf.v4.new_code_cell(f'''
 {data} = {data}.query("{op['query']}")'''))

@@ -29,25 +29,25 @@ def build_list():
     if dpg.does_item_exist("main_layout"): dpg.delete_item("main_layout")
     
     with dpg.group(parent="main_window", tag="main_layout"):
-        with dpg.group(horizontal=True):
-            with dpg.group(horizontal=False):
-                dpg.add_text(f"Total records: {len(state.df_global)}")
-                with dpg.group(horizontal=True):
-                    dpg.add_combo(list(state.sessions.keys()), tag="session_sel", width=150, default_value=state.active_session)
-                    dpg.bind_item_theme(dpg.add_button(label="Load", callback=lambda: switch_session(dpg.get_value("session_sel"))), tm.PRIMARY)
-                    dpg.add_input_text(tag="new_session_name", hint="Session Name...", width=120)
-                    dpg.bind_item_theme(dpg.add_button(label="Create Session", callback=save_session), tm.PRIMARY)
-                    dpg.bind_item_theme(dpg.add_button(label="Session Timeline", callback=view_utils.show_session_graph), tm.SECONDARY)
-                dpg.bind_item_theme(dpg.add_button(label="Save Explorations", callback=lambda: dpg.show_item("save_explorations")), tm.SECONDARY)
-            
-            dpg.add_spacer(width=20)
-            dpg.bind_item_theme(
-                dpg.add_button(
-                    label="Export Data", 
-                    callback=lambda: dpg.show_item("export_file_dialog")
-                ), 
-                tm.PRIMARY
-            )
+        with dpg.group(horizontal=False):
+            dpg.add_text(f"Total records: {len(state.df_global)}")
+            with dpg.group(horizontal=True):
+                dpg.add_combo(list(state.sessions.keys()), tag="session_sel", width=150, default_value=state.active_session)
+                dpg.bind_item_theme(dpg.add_button(label="Load", callback=lambda: switch_session(dpg.get_value("session_sel"))), tm.PRIMARY)
+                dpg.add_input_text(tag="new_session_name", hint="Session Name...", width=120)
+                dpg.bind_item_theme(dpg.add_button(label="Create Session", callback=save_session), tm.PRIMARY)
+                dpg.bind_item_theme(dpg.add_button(label="Session Timeline", callback=view_utils.show_session_graph), tm.SECONDARY)
+            with dpg.group(horizontal=True):
+                dpg.bind_item_theme(
+                    dpg.add_button(
+                        label="Save Explorations", 
+                        callback=lambda: dpg.show_item("save_explorations")), 
+                        tm.SECONDARY)
+                dpg.bind_item_theme(
+                    dpg.add_button(
+                        label="Export Data", 
+                        callback=lambda: dpg.show_item("export_file_dialog")), 
+                    tm.PRIMARY)
 
         dpg.add_separator()
         
