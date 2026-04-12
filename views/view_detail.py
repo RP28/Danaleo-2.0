@@ -13,6 +13,16 @@ def open_view(col):
     with dpg.child_window(tag="col_detail", parent="content_area", width=250, border=True):
         dpg.add_text(f"Column: {col}", color=(180, 220, 255))
         dpg.add_text(f"Type: {state.df_global[col].dtype}")
+
+        with dpg.collapsing_header(label="Basic Stats", default_open=False):
+            stats = state.df_global[col].describe(include="all").to_dict()
+            for stat_name, stat_value in stats.items():
+                dpg.add_text(f"{stat_name}: {stat_value}")
+
+        with dpg.collapsing_header(label="Sample Data", default_open=False):
+            sample_data = state.df_global[col].dropna().unique()[:10]
+            for val in sample_data:
+                dpg.add_text(f" - {val}")
         
         dpg.add_separator()
         dpg.add_input_text(tag="filter_query", hint="Filter query (e.g. col > 10)", width=-1)
