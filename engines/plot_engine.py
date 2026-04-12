@@ -156,7 +156,8 @@ def render_to_dpg(fig, iid, parent, save_name=None):
     return img_data
 
 def draw_hist(data, col, iid, parent, save_name=None):
-    fig = Figure(figsize=(6.4, 4.8)); ax = fig.add_subplot(111)
+    fig = Figure(figsize=(6.4, 4.8))
+    ax = fig.add_subplot(111)
     color = get_state(col, iid, "color", "skyblue")
     kde = get_state(col, iid, "kde", True)
     bins = get_state(col, iid, "bins", 20)
@@ -164,7 +165,8 @@ def draw_hist(data, col, iid, parent, save_name=None):
     return render_to_dpg(fig, iid, parent, save_name)
 
 def draw_bar(data, col, iid, parent, save_name=None):
-    fig = Figure(figsize=(6.4, 4.8)); ax = fig.add_subplot(111)
+    fig = Figure(figsize=(6.4, 4.8))
+    ax = fig.add_subplot(111)
     topn = get_state(col, iid, "topn", 10)
     palette = get_state(col, iid, "palette", "magma")
     counts = data.value_counts().head(topn)
