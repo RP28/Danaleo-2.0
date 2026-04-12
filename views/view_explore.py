@@ -1,6 +1,6 @@
 import dearpygui.dearpygui as dpg
 import state
-import plot_engine as engine
+import engines.plot_engine as engine
 import theme_manager as tm
 import pandas as pd
 from views import view_utils
