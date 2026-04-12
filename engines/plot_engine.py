@@ -7,38 +7,40 @@ import dearpygui.dearpygui as dpg
 import state
 import theme_manager as tm
 
-# --- Centralized Registry ---
-PLOT_CONFIG = {
-    "Histogram": {
-        "draw_func": lambda data, col, iid, parent, save_name: draw_hist(data, col, iid, parent, save_name),
-        "controls": [
-            {"type": "slider_int", "label": "Bins", "key": "bins", "default": 20, "min": 5, "max": 100},
-            {"type": "checkbox", "label": "KDE", "key": "kde", "default": True},
-            {"type": "combo", "label": "Color", "key": "color", "default": "skyblue", "items": ["skyblue", "salmon", "lightgreen", "gold", "orchid"]}
-        ],
-        "requires_refresh_on_keys": ["query", "color", "kde"],
-        "numeric_only": True
-    },
-    "Boxplot": {
-        "draw_func": lambda data, col, iid, parent, save_name: draw_box(data, col, iid, parent, save_name),
-        "controls": [
-            {"type": "checkbox", "label": "Compare Mode", "key": "compare_mode", "default": False},
-            {"type": "combo", "label": "Palette", "key": "palette", "default": "Set2", "items": ["Set2", "Paired", "Accent", "Pastel1", "Dark2", "viridis", "rocket"]}
-        ],
-        "requires_refresh_on_keys": ["compare_mode", "query", "comp_queries", "palette"],
-        "extra_ui": lambda col, iid, refresh_cb: render_boxplot_ui(col, iid, refresh_cb),
-        "numeric_only": True
-    },
-    "Bar Chart (Top N)": {
-        "draw_func": lambda data, col, iid, parent, save_name: draw_bar(data, col, iid, parent, save_name),
-        "controls": [
-            {"type": "slider_int", "label": "Top N", "key": "topn", "default": 10, "min": 1, "max": 50},
-            {"type": "combo", "label": "Palette", "key": "palette", "default": "magma", "items": ["magma", "viridis", "rocket", "mako", "crest"]}
-        ],
-        "requires_refresh_on_keys": ["query", "palette"],
-        "categorical_only": True
+def get_plot_config():
+    return {
+        "Histogram": {
+            "draw_func": lambda data, col, iid, parent, save_name: draw_hist(data, col, iid, parent, save_name),
+            "controls": [
+                {"type": "slider_int", "label": "Bins", "key": "bins", "default": 20, "min": 5, "max": 100},
+                {"type": "checkbox", "label": "KDE", "key": "kde", "default": True},
+                {"type": "combo", "label": "Color", "key": "color", "default": "skyblue", "items": ["skyblue", "salmon", "lightgreen", "gold", "orchid"]}
+            ],
+            "requires_refresh_on_keys": ["query", "color", "kde"],
+            "numeric_only": True
+        },
+        "Boxplot": {
+            "draw_func": lambda data, col, iid, parent, save_name: draw_box(data, col, iid, parent, save_name),
+            "controls": [
+                {"type": "checkbox", "label": "Compare Mode", "key": "compare_mode", "default": False},
+                {"type": "combo", "label": "Split By", "key": "split_by", "default": "None", 
+                "items": ["None"] + [c for c in state.df_global.columns if not pd.api.types.is_numeric_dtype(state.df_global[c])]},
+                {"type": "combo", "label": "Palette", "key": "palette", "default": "Set2", "items": ["Set2", "Paired", "Accent", "Pastel1", "Dark2", "viridis", "rocket"]}
+            ],
+            "requires_refresh_on_keys": ["compare_mode", "query", "comp_queries", "palette", "split_by"], 
+            "extra_ui": lambda col, iid, refresh_cb: render_boxplot_ui(col, iid, refresh_cb),
+            "numeric_only": True
+        },
+        "Bar Chart (Top N)": {
+            "draw_func": lambda data, col, iid, parent, save_name: draw_bar(data, col, iid, parent, save_name),
+            "controls": [
+                {"type": "slider_int", "label": "Top N", "key": "topn", "default": 10, "min": 1, "max": 50},
+                {"type": "combo", "label": "Palette", "key": "palette", "default": "magma", "items": ["magma", "viridis", "rocket", "mako", "crest"]}
+            ],
+            "requires_refresh_on_keys": ["query", "palette"],
+            "categorical_only": True
+        }
     }
-}
 
 _textures = {}
 
@@ -82,11 +84,29 @@ def _on_remove_sub_q(sender, app_data, user_data):
         save_state(col, iid, {"comp_queries": queries})
     refresh_cb()
 
+def _on_auto_split(sender, app_data, user_data):
+    col, iid, refresh_cb = user_data
+    split_col = get_state(col, iid, "split_by", "None")
+    if split_col == "None": return
+    
+    base_query = get_state(col, iid, "query", "")
+    data = state.df_global.query(base_query) if base_query else state.df_global
+    unique_vals = data[split_col].dropna().unique().tolist()
+    
+    new_queries = [f"`{split_col}` == '{v}'" for v in unique_vals]
+    save_state(col, iid, {"comp_queries": new_queries})
+    refresh_cb()
+
 def render_boxplot_ui(col, iid, refresh_cb):
     if not get_state(col, iid, "compare_mode", False):
         return
 
     with dpg.group(indent=20):
+        split_col = get_state(col, iid, "split_by", "None")
+        if split_col != "None":
+            dpg.bind_item_theme(dpg.add_button(label=f"Auto-Split by {split_col}", 
+                               callback=_on_auto_split, user_data=(col, iid, refresh_cb)), tm.SECONDARY)
+            
         dpg.add_text("Sub-plot Refinements:", color=(100, 200, 255))
         comp_queries = get_state(col, iid, "comp_queries", [""])
         

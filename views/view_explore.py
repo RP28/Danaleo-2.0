@@ -9,7 +9,7 @@ def _on_control_change(sender, app_data, user_data):
     col, iid, ptype, key = user_data
     engine.save_state(col, iid, {key: app_data})
     
-    config = engine.PLOT_CONFIG.get(ptype, {})
+    config = engine.get_plot_config().get(ptype, {})
     if key in config.get("requires_refresh_on_keys", []):
         add_plot(ptype, col, iid)
     else:
@@ -18,7 +18,7 @@ def _on_control_change(sender, app_data, user_data):
 def add_plot(ptype, col, iid=None):
     is_new = iid is None
     iid = iid or dpg.generate_uuid()
-    config = engine.PLOT_CONFIG[ptype]
+    config = engine.get_plot_config()[ptype]
     
     if is_new:
         engine.save_state(col, iid, {"type": ptype, "query": "", "comp_queries": [""]})
@@ -30,7 +30,7 @@ def add_plot(ptype, col, iid=None):
 
     with dpg.group(parent=iid):
         if config.get("controls"):
-            with dpg.group(horizontal=True):
+            with dpg.group(horizontal=False):
                 for ctrl in config["controls"]:
                     val = engine.get_state(col, iid, ctrl["key"], ctrl["default"])
                     u_data = (col, iid, ptype, ctrl["key"])
@@ -78,7 +78,7 @@ def add_plot(ptype, col, iid=None):
                         "Enter export name:", 
                         _ready_plot_to_export,
                         (ptype, col, iid),
-                        []
+                        [plt_info["name"] for _, plt_infos in state.plots_to_be_exported.items() for plt_info in plt_infos if plt_info["column"] == col and plt_info["session"] == state.active_session],
                     )), tm.PRIMARY)
             
         dpg.bind_item_theme(dpg.add_button(label="Delete plot", 
@@ -111,7 +111,7 @@ def _save_plot(save_name, ptype, col, iid):
     open_explore(col)
 
 def refresh_plot(ptype, col, iid, save_name):
-    config = engine.PLOT_CONFIG.get(ptype)
+    config = engine.get_plot_config().get(ptype)
     query = engine.get_state(col, iid, "query", "")
     cont_tag = f"cont_{iid}"
     img_data = None    
@@ -133,9 +133,9 @@ def open_explore(column_name):
         
         opts = []
         if pd.api.types.is_numeric_dtype(col_data):
-            opts = [k for k, v in engine.PLOT_CONFIG.items() if v.get("numeric_only")]
+            opts = [k for k, v in engine.get_plot_config().items() if v.get("numeric_only")]
         else:
-            opts = [k for k, v in engine.PLOT_CONFIG.items() if v.get("categorical_only")]
+            opts = [k for k, v in engine.get_plot_config().items() if v.get("categorical_only")]
         
         with dpg.group(horizontal=True):
             dpg.add_combo(opts, tag="sel_plot", width=150, default_value=opts[0])
@@ -148,5 +148,5 @@ def open_explore(column_name):
         
         sessions_data = state.explore_sessions.get(state.active_session, {}).get(column_name, {})
         for iid, data in sessions_data.items():
-            if data.get("type") in engine.PLOT_CONFIG:
+            if data.get("type") in engine.get_plot_config():
                 add_plot(data["type"], column_name, iid)

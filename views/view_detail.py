@@ -52,7 +52,7 @@ def open_view(col):
             plts_to_be_saved = []
             for _, plt_infos in state.plots_to_be_exported.items():
                 for plt_info in plt_infos:
-                    if plt_info["column"] == col:
+                    if plt_info["column"] == col and plt_info["session"] == state.active_session:
                         if plt_info["type"] == "Histogram":
                             plts_to_be_saved.append({
                                 "name": plt_info["name"],
@@ -83,6 +83,35 @@ def open_view(col):
                 for plt_info in plts_to_be_saved:
                     with dpg.collapsing_header(label=plt_info["name"], default_open=False):
                         dpg.add_text(json.dumps(plt_info, indent=4))
+                        dpg.bind_item_theme(
+                            dpg.add_button(
+                                label="Remove", 
+                                callback=lambda s, a, u: _remove_plt_to_be_exported(u, col),
+                                user_data={
+                                    "name": plt_info["name"],
+                                    "column": col,
+                                    "session": plt_info["session"]
+                                }), tm.DANGER)
+
+def _remove_plt_to_be_exported(target_info, col):
+    found = False    
+    for time_key in list(state.plots_to_be_exported.keys()):
+        plt_list = state.plots_to_be_exported[time_key]        
+        for i, info in enumerate(plt_list):
+            if (info["name"] == target_info["name"] and 
+                info["column"] == target_info["column"] and 
+                info["session"] == target_info["session"]):
+                plt_list.pop(i)
+                found = True                
+                if not plt_list:
+                    del state.plots_to_be_exported[time_key]
+                break  
+        if found:
+            break
+
+    open_view(col)
+    if dpg.does_item_exist("explore_window"):
+        view_explore.open_explore(col)
 
 def apply_filter(data):
     query = dpg.get_value("filter_query")
