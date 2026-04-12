@@ -5,6 +5,7 @@ import theme_manager as tm
 import animation
 from views import view_utils
 import constants as const
+import export_engine as exp
 
 anim = animation.AnimationState()
 
@@ -12,6 +13,17 @@ if not dpg.does_item_exist("save_explorations"):
     with dpg.file_dialog(label="Save As", show=False, callback=lambda s, a: _save_explorations(s, a), 
         tag="save_explorations", width=600, height=400):
         dpg.add_file_extension(".pkl")
+
+if not dpg.does_item_exist("export_file_dialog"):
+    with dpg.file_dialog(
+        label="Export Notebook", 
+        show=False, 
+        callback=lambda s, a: exp.export_to_ipynb(a['file_path_name']), 
+        tag="export_file_dialog", 
+        width=600, 
+        height=400
+    ):
+        dpg.add_file_extension(".ipynb")
 
 def build_list():
     if dpg.does_item_exist("main_layout"): dpg.delete_item("main_layout")
@@ -25,7 +37,17 @@ def build_list():
                 dpg.add_input_text(tag="new_session_name", hint="Session Name...", width=120)
                 dpg.bind_item_theme(dpg.add_button(label="Create Session", callback=save_session), tm.PRIMARY)
                 dpg.bind_item_theme(dpg.add_button(label="Session Timeline", callback=view_utils.show_session_graph), tm.SECONDARY)
-            dpg.bind_item_theme(dpg.add_button(label="Save Explorations", callback=lambda: dpg.show_item("save_explorations")), tm.SECONDARY)
+            with dpg.group(horizontal=True):
+                dpg.bind_item_theme(
+                    dpg.add_button(
+                        label="Save Explorations", 
+                        callback=lambda: dpg.show_item("save_explorations")), 
+                        tm.SECONDARY)
+                dpg.bind_item_theme(
+                    dpg.add_button(
+                        label="Export Data", 
+                        callback=lambda: dpg.show_item("export_file_dialog")), 
+                    tm.PRIMARY)
 
         dpg.add_separator()
         
@@ -91,7 +113,9 @@ def _save_explorations(sender, app_data):
         "current_column": state.current_column,
         "explore_sessions": state.explore_sessions,
         "saved_plots": state.saved_plots,
-        "df_global": state.df_global
+        "df_global": state.df_global,
+        "plots_to_be_exported": state.plots_to_be_exported,
+        "df_path": state.df_path
     }
 
     with open(selected_path, 'wb') as f: 

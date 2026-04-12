@@ -72,10 +72,37 @@ def add_plot(ptype, col, iid=None):
                     callback=lambda s, a, u: view_utils.show_plot_zoom(u), 
                     user_data=img_data), 
                     tm.PRIMARY)
+                dpg.bind_item_theme(dpg.add_button(label="Export", 
+                    callback=lambda: view_utils.input_modal(
+                        "Export Plot", 
+                        "Enter export name:", 
+                        _ready_plot_to_export,
+                        (ptype, col, iid),
+                        []
+                    )), tm.PRIMARY)
             
         dpg.bind_item_theme(dpg.add_button(label="Delete plot", 
                                             callback=lambda: dpg.delete_item(iid)), 
                                             tm.DANGER)
+        
+def _ready_plot_to_export(plot_name, ptype, col, iid):
+    state.plots_to_be_exported.setdefault(state.current_time, [])
+    state.plots_to_be_exported[state.current_time].append({
+        "name": plot_name,
+        "type": ptype,
+        "column": col,
+        "query": engine.get_state(col, iid, "query", ""),
+        "comp_queries": engine.get_state(col, iid, "comp_queries", []),
+        "palette": engine.get_state(col, iid, "palette", "Set2"),
+        "color": engine.get_state(col, iid, "color", "skyblue"),
+        "kde": engine.get_state(col, iid, "kde", True),
+        "bins": engine.get_state(col, iid, "bins", 20),
+        "topn": engine.get_state(col, iid, "topn", 10),
+        "session": state.active_session
+    })
+    from views.view_detail import open_view
+    open_view(col)
+    open_explore(col)
 
 def _save_plot(save_name, ptype, col, iid):
     from views.view_detail import open_view

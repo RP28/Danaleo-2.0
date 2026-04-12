@@ -4,6 +4,7 @@ import theme_manager as tm
 from views import view_explore, view_main
 from views.view_utils import confirm_action, show_plot_zoom
 import constants as const
+import json
 
 def open_view(col):
     state.current_column = col
@@ -37,6 +38,41 @@ def open_view(col):
                                    width=const.BUTTON_WIDTH, 
                                    callback=lambda s, a, u: show_plot_zoom(u), 
                                    user_data=plt_info["data"])
+            dpg.add_separator()
+            plts_to_be_saved = []
+            for _, plt_infos in state.plots_to_be_exported.items():
+                for plt_info in plt_infos:
+                    if plt_info["column"] == col:
+                        if plt_info["type"] == "Histogram":
+                            plts_to_be_saved.append({
+                                "name": plt_info["name"],
+                                "type": plt_info["type"],
+                                "session": plt_info["session"],
+                                "query": plt_info["query"],
+                                "bins": plt_info["bins"],
+                                "kde": plt_info["kde"]
+                            })
+                        elif plt_info["type"] == "Boxplot":
+                            plts_to_be_saved.append({
+                                "name": plt_info["name"],
+                                "type": plt_info["type"],
+                                "session": plt_info["session"],
+                                "query": plt_info["query"],
+                                "comp_queries": plt_info["comp_queries"]
+                            })
+                        elif plt_info["type"] == "Bar Chart (Top N)":
+                            plts_to_be_saved.append({
+                                "name": plt_info["name"],
+                                "type": plt_info["type"],
+                                "session": plt_info["session"],
+                                "query": plt_info["query"],
+                                "topn": plt_info["topn"]
+                            })
+            if plts_to_be_saved:
+                dpg.add_text("Plots to be exported:", color=(255, 200, 100))
+                for plt_info in plts_to_be_saved:
+                    with dpg.collapsing_header(label=plt_info["name"], default_open=False):
+                        dpg.add_text(json.dumps(plt_info, indent=4))
 
 def apply_filter(data):
     query = dpg.get_value("filter_query")
