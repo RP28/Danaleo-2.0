@@ -118,7 +118,7 @@ def _get_node_text(info, name):
         case "filter":
             return f"Queried {info['query']}"
         case "replace":
-            return f"Replaced '{info['old_value']}' with '{info['new_value']}'"
+            return f"Replaced {info['old_value']} with {info['new_value']}"
         case "drop_col":
             return f"Dropped {info['column']}"
         case _:

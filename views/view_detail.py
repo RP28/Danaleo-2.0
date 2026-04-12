@@ -116,6 +116,9 @@ def render_operation_ui():
             if param["type"] == "input_text":
                 dpg.add_input_text(label=param["label"], tag=tag_id, width=150)
                 param_tags[param["key"]] = tag_id
+            elif param["type"] == "checkbox":
+                dpg.add_checkbox(label=param["label"], tag=tag_id)
+                param_tags[param["key"]] = tag_id
                 
         if config.get("display_error"):
             err_tag = f"{tag_id}_error"
