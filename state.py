@@ -1,11 +1,11 @@
 import pandas as pd
 
 df_global: pd.DataFrame | None = None
-sessions = {}  
-current_time = None
-active_session = None
-current_column = None
-explore_sessions = {}
-saved_plots = {}
-plots_to_be_exported = {}
-df_path = None
+sessions: dict[str, dict] = {}  
+current_time: int | None = None
+active_session: str | None = None
+current_column: str | None = None
+explore_sessions: dict[str, list] = {}
+saved_plots: dict[str, dict] = {}
+plots_to_be_exported: dict[int, list] = {}
+df_path: str | None = None

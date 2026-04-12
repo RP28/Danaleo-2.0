@@ -17,7 +17,7 @@ def get_plot_config():
                 {"type": "combo", "label": "Color", "key": "color", "default": "skyblue", "items": ["skyblue", "salmon", "lightgreen", "gold", "orchid"]}
             ],
             "requires_refresh_on_keys": ["query", "color", "kde"],
-            "numeric_only": True
+            "is_for_numeric": True
         },
         "Boxplot": {
             "draw_func": lambda data, col, iid, parent, save_name: draw_box(data, col, iid, parent, save_name),
@@ -29,7 +29,7 @@ def get_plot_config():
             ],
             "requires_refresh_on_keys": ["compare_mode", "query", "comp_queries", "palette", "split_by"], 
             "extra_ui": lambda col, iid, refresh_cb: render_boxplot_ui(col, iid, refresh_cb),
-            "numeric_only": True
+            "is_for_numeric": True
         },
         "Bar Chart (Top N)": {
             "draw_func": lambda data, col, iid, parent, save_name: draw_bar(data, col, iid, parent, save_name),
@@ -38,7 +38,7 @@ def get_plot_config():
                 {"type": "combo", "label": "Palette", "key": "palette", "default": "magma", "items": ["magma", "viridis", "rocket", "mako", "crest"]}
             ],
             "requires_refresh_on_keys": ["query", "palette"],
-            "categorical_only": True
+            "is_for_categorical": True
         }
     }
 

@@ -78,6 +78,9 @@ df_{session_name} = {parent_data}.copy()'''))
         case "drop_col":
             cells.append(nbf.v4.new_code_cell(f'''
 {data} = {data}.drop(columns=["{op['column']}"])'''))
+        case "replace":
+            cells.append(nbf.v4.new_code_cell(f'''
+{data}["{state.current_column}"] = {data}["{state.current_column}"].replace("{op['old_value']}", "{op['new_value']}")'''))
                 
 def _add_plot_operation(cells, plot_data):
     data = "df" if plot_data["session"] == "Base Session" else f"df_{plot_data["session"].replace(" ", "_")}"

@@ -133,9 +133,9 @@ def open_explore(column_name):
         
         opts = []
         if pd.api.types.is_numeric_dtype(col_data):
-            opts = [k for k, v in engine.get_plot_config().items() if v.get("numeric_only")]
+            opts = [k for k, v in engine.get_plot_config().items() if v.get("is_for_numeric")]
         else:
-            opts = [k for k, v in engine.get_plot_config().items() if v.get("categorical_only")]
+            opts = [k for k, v in engine.get_plot_config().items() if v.get("is_for_categorical")]
         
         with dpg.group(horizontal=True):
             dpg.add_combo(opts, tag="sel_plot", width=150, default_value=opts[0])
