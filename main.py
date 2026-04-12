@@ -6,6 +6,7 @@ import pickle
 def _on_upload(sender, app_data):
     from views import view_main     
     path = list(app_data['selections'].values())[0]
+    state.df_path = path
     try:
         state.df_global = pd.read_csv(path) if path.endswith('.csv') else pd.read_excel(path)
         state.active_session = "Base Session"
@@ -33,7 +34,8 @@ def _load_explorations(sender, app_data):
     selected_path = app_data['file_path_name']
     required_keys = [
         "sessions", "current_time", "active_session", 
-        "current_column", "explore_sessions", "saved_plots", "df_global"
+        "current_column", "explore_sessions", "saved_plots", 
+        "df_global", "plots_to_be_exported", "df_path"
     ]
     try: 
         with open(selected_path, 'rb') as f:
@@ -49,6 +51,8 @@ def _load_explorations(sender, app_data):
             state.explore_sessions = loaded_data["explore_sessions"]
             state.saved_plots = loaded_data["saved_plots"]
             state.df_global = loaded_data["df_global"]
+            state.plots_to_be_exported = loaded_data["plots_to_be_exported"]
+            state.df_path = loaded_data["df_path"]
 
     except KeyError as ke:
         print(f"Log: Key error loading explorations: {ke}")

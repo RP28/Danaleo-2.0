@@ -37,6 +37,16 @@ def open_view(col):
                                    width=const.BUTTON_WIDTH, 
                                    callback=lambda s, a, u: show_plot_zoom(u), 
                                    user_data=plt_info["data"])
+            dpg.add_separator()
+            plt_names_to_be_saved = []
+            for _, plt_infos in state.plots_to_be_exported.items():
+                for plt_info in plt_infos:
+                    if plt_info["column"] == col:
+                        plt_names_to_be_saved.append(plt_info["name"])
+            if plt_names_to_be_saved:
+                dpg.add_text("Plots to be exported:", color=(255, 200, 100))
+                for name in plt_names_to_be_saved:
+                    dpg.add_text(f" - {name}", color=(100, 255, 150))
 
 def apply_filter(data):
     query = dpg.get_value("filter_query")
