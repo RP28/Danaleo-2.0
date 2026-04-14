@@ -32,17 +32,22 @@ def build_list():
         with dpg.group(horizontal=False):
             dpg.add_text(f"Total records: {len(state.df_global)}")
             with dpg.group(horizontal=True):
-                dpg.add_combo(list(state.sessions.keys()), tag="session_sel", width=150, default_value=state.active_session)
-                dpg.bind_item_theme(dpg.add_button(label="Load", callback=lambda: switch_session(dpg.get_value("session_sel"))), tm.PRIMARY)
-                dpg.add_input_text(tag="new_session_name", hint="Session Name...", width=120)
-                dpg.bind_item_theme(dpg.add_button(label="Create Session", callback=save_session), tm.PRIMARY)
-                dpg.bind_item_theme(dpg.add_button(label="Session Timeline", callback=view_utils.show_session_graph), tm.SECONDARY)
+                dpg.bind_item_theme(dpg.add_combo(list(state.sessions.keys()), 
+                                                  tag="session_sel", 
+                                                  width=150, 
+                                                  default_value=state.active_session, 
+                                                  callback=_switch_session), tm.SECONDARY)
+                with dpg.group(horizontal=True):
+                    dpg.bind_item_theme(dpg.last_container(), tm.NO_SPACE)
+                    dpg.bind_item_theme(dpg.add_input_text(tag="new_session_name", hint="Session Name...", width=120), tm.SECONDARY)
+                    dpg.bind_item_theme(dpg.add_button(label="Create", callback=save_session), tm.PRIMARY)
+                dpg.bind_item_theme(dpg.add_button(label="Session Timeline", callback=view_utils.show_session_graph), tm.PRIMARY)
             with dpg.group(horizontal=True):
                 dpg.bind_item_theme(
                     dpg.add_button(
                         label="Save Explorations", 
                         callback=lambda: dpg.show_item("save_explorations")), 
-                        tm.SECONDARY)
+                        tm.PRIMARY)
                 dpg.bind_item_theme(
                     dpg.add_button(
                         label="Export Data", 
@@ -77,7 +82,8 @@ def slide_back():
     target_indent = (vw - const.BUTTON_WIDTH) // 2
     animation.animate_width("sliding_spacer", target_indent, anim)
 
-def switch_session(name):
+def _switch_session(sender, app_data):
+    name = str(app_data)
     state.active_session = name
     state.df_global = state.sessions[name]["data"].copy()
     close_all_subviews()
