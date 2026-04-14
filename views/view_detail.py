@@ -42,6 +42,8 @@ def open_view(col):
         
         dpg.add_separator()
         with dpg.group(horizontal=True):
+            if bool(state.explore_sessions.get(state.active_session, {}).get(col, {})): 
+                view_explore.open_explore(col)
             dpg.bind_item_theme(dpg.add_button(label="Explore", callback=lambda: view_explore.open_explore(col)), tm.PRIMARY)
             dpg.bind_item_theme(dpg.add_button(label="Drop", callback=lambda: confirm_action("Drop", f"Delete {col}?", drop_col, col)), tm.DANGER)
         
